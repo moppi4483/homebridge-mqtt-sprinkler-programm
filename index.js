@@ -172,12 +172,12 @@ function BeregnungsanlageProgrammAccessory(log, config) {
 		this.offValue = "0";
 	}
 
-    this.programmStatus = false;  
+    this.programmStatus = true;  
 
-    this.bpService = new Service.Label(this.name);
-    this.bpService
-    	.getCharacteristic(Characteristic.On)
-    	.on('get', this.getStatus.bind(this));
+    this.bpService = new Service.ContactSensor(this.name);
+   	this.bpService
+    	.getCharacteristic(Characteristic.ContactSensorState)
+    	.on('get', this.getContactSensorState.bind(this));
                 
     this.bpService.addCharacteristic(BeregnungsanlageProgrammAccessory.BPRasenWasser);
   	this.bpService.addCharacteristic(BeregnungsanlageProgrammAccessory.BPRegnerLaufzeit);
@@ -193,7 +193,7 @@ function BeregnungsanlageProgrammAccessory(log, config) {
 	});
 
 	this.client.on('message', function (topic, message) {
-		that.log(this.name, " -  New Message");
+		that.log("New Message");
 		if (topic == that.topicStatusGet) {
 			var programm = "";
 			
@@ -228,7 +228,7 @@ function BeregnungsanlageProgrammAccessory(log, config) {
 			
 			if (programm == that.onValue || programm == that.offValue) {
 			    that.programmStatus = (programm == that.onValue) ? true : false;
-		   	    that.bpService.getCharacteristic(Characteristic.On).setValue(that.programmStatus, undefined, 'fromSetValue');
+		   	    that.bpService.getCharacteristic(Characteristic.ContactSensorState).setValue(that.programmStatus, undefined, 'fromSetValue');
 		   	 }
 		}
 	});
@@ -236,11 +236,19 @@ function BeregnungsanlageProgrammAccessory(log, config) {
 }
 
 
-BeregnungsanlageProgrammAccessory.prototype.getStatus = function(callback) {
-    if (this.statusCmd !== undefined) {
-    	this.client.publish(this.topicStatusRequest, this.statusCmd, this.publish_options);
-    }
-    callback(null, this.programmStatus);
+BeregnungsanlageProgrammAccessory.prototype.identify = function(callback) {
+	this.log("Identify requested!");
+	callback(null);
+};
+
+BeregnungsanlageProgrammAccessory.prototype.getContactSensorState = function(callback) {
+	this.log("getSensorState :", this.programmStatus);
+	callback(null, this.programmStatus);
+};
+
+BeregnungsanlageProgrammAccessory.prototype.getName = function(callback) {
+	this.log("getName :", this.name);
+	callback(null, this.name);
 };
 	
 BeregnungsanlageProgrammAccessory.prototype.getServices = function () {
